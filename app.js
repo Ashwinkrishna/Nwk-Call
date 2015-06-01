@@ -1,40 +1,13 @@
-var express = require('express'),
-    path = require('path'),
-    cookieParser = require('cookie-parser'),
-    bodyParser = require('body-parser');
-
-var routes = require('./routes');
-
-
+var express = require('express')
 var app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+app.set('port', (process.env.PORT || 5000))
+app.use(express.static(__dirname + '/public'))
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded());
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-//app.use(express.static(__dirname));
-app.get('/', routes.index);
+app.get('/', function(request, response) {
+  response.send('Hello World!')
+})
 
-app.set('port', process.env.PORT || 3000);
-
-//var port = Number(process.env.PORT || 3000)
-var server = app.listen(app.get('port'), function() {
-    // log a message to console!
-    console.log("listining to port 3000");
-});
-
-var PeerServer = require('peer').PeerServer;
-var server = PeerServer({
-    port: 9000
-});
-
-server.on('connection', function(id) { 
-    console.log("one user connected");
-});
-server.on('disconnect', function(id) { 
-        console.log("one user disconnected");
-});
+app.listen(app.get('port'), function() {
+  console.log("Node app is running at localhost:" + app.get('port'))
+})
