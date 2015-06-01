@@ -21,6 +21,7 @@ app.get('/', routes.index);
 
 app.set('port', process.env.PORT || 3000);
 
+//var port = Number(process.env.PORT || 3000)
 var server = app.listen(app.get('port'), function() {
     // log a message to console!
     console.log("listining to port 3000");
