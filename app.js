@@ -32,9 +32,9 @@ var server = PeerServer({
     port: 9000
 });
 
-server.on('connection', function(id) { 
-    console.log("one user connected");
-});
-server.on('disconnect', function(id) { 
-        console.log("one user disconnected");
-});
+//server.on('connection', function(id) { 
+//    console.log("one user connected");
+//});
+//server.on('disconnect', function(id) { 
+//        console.log("one user disconnected");
+//});
