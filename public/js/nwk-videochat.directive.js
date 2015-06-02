@@ -51,6 +51,7 @@ angular.module('nwk-videochat')
                         console.log("Peer connection is undefined");
                     }
                     //peer connection opened
+                    try{
                     peer.on('open', function(id) {
                         if (id === null || id === undefined)
                             console.log("Id of the peer was undefined")
@@ -58,6 +59,9 @@ angular.module('nwk-videochat')
                         $scope.statusMsg = 'Connected to Peer Server...';
                         $scope.statusMsg = 'Streaming local video...';
                     });
+                    }catch(e){
+                        console.log("Peer was not defined call the peer server to fer id ...");
+                    }
 
                     // Listen to incoming calls
                     peer.on('call', function(call) {
