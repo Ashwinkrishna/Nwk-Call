@@ -39,7 +39,7 @@ angular.module('nwk-videochat')
                         var peerId = id();
                         console.log("Peer -- >", peerId);
                         var peer = new Peer(peerId, {
-                            host: '192.168.48.45',
+                            host: '184.73.254.59',
                             port: 9000
                         });
 
