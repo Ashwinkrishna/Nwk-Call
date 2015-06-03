@@ -117,7 +117,7 @@ angular.module('nwk-videochat')
                     function initSelfVideo(cb) {
                         navigator.getUserMedia({
                             audio: true, // constraints for the call
-                            video: true
+                            video: false
                         }, function(stream) {
                             $scope.localStream = stream; // sucess call back
                             $scope.localVdoURL = $sce.trustAsResourceUrl(URL.createObjectURL(stream));
