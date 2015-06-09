@@ -2,16 +2,16 @@
     <div>
         <input type="text" ng-model="roomToJoin">
         <p>joining : {{roomToJoin}}</p>
-        <input type="button" ng-click="joinRoom()" value="Join">
+        <input type="button" ng-click="joinRoom()" value="Join the room ">
     </div>
     <div>
         <input type="text" ng-model="roomToLeave">
         <p>leave room : {{roomToLeave}}</p>
-        <input type="button" ng-click="leaveRoom()" value="Leave">
+        <input type="button" ng-click="leaveRoom()" value="Leave the room">
     </div>
     <form id="createRoom">
         <input id="sessionInput" />
-        <button type="submit">Create it!</button>
+        <button type="submit">Create Room!</button>
     </form>
     <div class="videoContainer">
         <video id="localVideo" style="height: 150px;" oncontextmenu="return false;"></video>
