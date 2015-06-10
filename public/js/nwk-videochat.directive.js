@@ -1,5 +1,3 @@
-'use strict';
-
 angular.module('nwk-videochat')
     .controller('mainController', ['$scope',
         function($scope) {
@@ -12,135 +10,127 @@ angular.module('nwk-videochat')
                 restrict: 'E',
                 templateUrl: 'partials/nwk-videochat.directive.html',
                 link: function($scope, e, a) {
-                    $scope.statusMsg = 'Loading..',
-                    $scope.id = '',
-                    $scope.localStream = '',
-                    $scope.isDisabled = false,
-                    $scope.callInProgress = false;
-                    $scope.showAnswerBtn = false;
-                    $scope.showEndBtn = false;
+                    $scope.roomToLeave = "";
+                    $scope.roomToJoin = "";
 
-                    setTimeout(function() {
-                        $scope.statusMsg = 'Contacting Peer Server...';
-                    }, 0);
-
-                    // Request video stream
-                    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
-
-                    // New peer connection with our server
+                    //--------------------------------------------
                     try {
-                        function RandomGen(){
-                            return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-                        }
+                        // create our webrtc connection
+                        var webrtc = new SimpleWebRTC({
+                            // the id/element dom element that will hold "our" video
+                            localVideoEl: 'localVideo',
+                            // the id/element dom element that will hold remote videos
+                            remoteVideosEl: '',
+                            // immediately ask for camera access
+                            autoRequestMedia: true,
+                            debug: false,
+                            detectSpeakingEvents: true,
+                            autoAdjustMic: false
+                        });
 
-                        function id(){
-                            return (RandomGen() + RandomGen() + RandomGen());
+                        // when it's ready, join if we got a room from the URL
+                        webrtc.on('readyToCall', function() {
+                            // you can name it anything
+
+                            // join the room
+                            $scope.joinRoom = function() {
+                                console.log('$scope.roomToJoin:', $scope.roomToJoin);
+                                webrtc.joinRoom($scope.roomToJoin);
+                            }
+                            // leave the room
+                            $scope.leaveRoom = function() {
+                                console.log('$scope.roomToLeave:', $scope.roomToLeave);
+                                webrtc.leaveRoom();
+                            }
+                        });
+
+                        function showVolume(el, volume) {
+                            if (!el) return;
+                            if (volume < -45) { // vary between -45 and -20
+                                el.style.height = '0px';
+                            } else if (volume > -20) {
+                                el.style.height = '100%';
+                            } else {
+                                el.style.height = '' + Math.floor((volume + 100) * 100 / 25 - 220) + '%';
+                            }
                         }
-                        var peerId = id();
-                        console.log("Peer -- >", peerId);
-                        var peer = new Peer(peerId, {
-                            host: '192.168.48.45',
-                            port: 9000
+                        webrtc.on('channelMessage', function(peer, label, data) {
+                            if (data.type == 'volume') {
+                                showVolume(document.getElementById('volume_' + peer.id), data.volume);
+                            }
+                        });
+                        // call back when video has to be added 
+                        webrtc.on('videoAdded', function(video, peer) {
+                            console.log('video added', peer);
+                            var remotes = document.getElementById('remotes');
+                            if (remotes) {
+                                var d = document.createElement('div');
+                                d.className = 'videoContainer';
+                                d.id = 'container_' + webrtc.getDomId(peer);
+                                d.appendChild(video);
+                                var vol = document.createElement('div');
+                                vol.id = 'volume_' + peer.id;
+                                vol.className = 'volume_bar';
+                                video.onclick = function() {
+                                    video.style.width = video.videoWidth + 'px';
+                                    video.style.height = video.videoHeight + 'px';
+                                };
+                                d.appendChild(vol);
+                                remotes.appendChild(d);
+                            }
+                        });
+                        // call back when video has to be removed when leaving a group 
+                        webrtc.on('videoRemoved', function(video, peer) {
+                            console.log('video removed ', peer);
+                            var remotes = document.getElementById('remotes');
+                            var el = document.getElementById('container_' + webrtc.getDomId(peer));
+                            if (remotes && el) {
+                                remotes.removeChild(el);
+                            }
+                        });
+                        // changes in volume controls
+                        webrtc.on('volumeChange', function(volume, treshold) {
+                            //console.log('own volume', volume);
+                            showVolume(document.getElementById('localVolume'), volume);
+                        });
+                        //ice server fails comes hear 
+                        webrtc.on('iceFailed', function(peer) {
+                            var connstate = document.querySelector('#container_' + webrtc.getDomId(peer) + ' .connectionstate');
+                            console.log('local fail', connstate);
+                            if (connstate) {
+                                connstate.innerText = 'Connection failed.';
+                                fileinput.disabled = 'disabled';
+                            }
+                        });
+
+                        // remote p2p/ice failure
+                        webrtc.on('connectivityError', function(peer) {
+                            var connstate = document.querySelector('#container_' + webrtc.getDomId(peer) + ' .connectionstate');
+                            console.log('remote fail', connstate);
+                            if (connstate) {
+                                connstate.innerText = 'Connection failed.';
+                                fileinput.disabled = 'disabled';
+                            }
+                        });
+
+                        //Creating the room
+                        $('form').submit(function() {
+                            var val = $('#sessionInput').val().toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9_\-]/g, '');
+                            // Create room and call back if fails
+                            webrtc.createRoom(val, function(err, name) {
+                                console.log(' create room cb', arguments);
+                                    console.log(err);
+                            });
+                            return false;
                         });
 
                     } catch (e) {
-                        console.log("Something went wrong creating peer");
+                        console.log("### --- > error in the program", e.message);
                     }
-                    //  check for peer connection created
-                    if (peer === null || peer === undefined) {
-                        console.log("Peer connection is undefined");
-                    }
-                    //peer connection opened
-                    peer.on('open', function(id) {
-                        if (id === null || id === undefined)
-                            console.log("Id of the peer was undefined")
-                        $scope.id = id;
-                        $scope.statusMsg = 'Connected to Peer Server...';
-                        $scope.statusMsg = 'Streaming local video...';
-                    });
+                    //--------------------------------------------
 
-                    // Listen to incoming calls
-                    peer.on('call', function(call) {
-                        // ask the user if he wants to answer the call
-                        console.log("inside call show the answer button");
-                        $scope.showAnswerBtn = true;
-                        $timeout(function() {
-                            $scope.showAnswerBtn = true;
-                        }, 0);
-                        $scope.answer = function() {
-                            if (call) {
-                                initSelfVideo(function() {
-                                    call.answer($scope.localStream);
-                                    $scope.showAnswerBtn = false;
-                                    handleCall(call);
-                                });
-                            } else {
-                                console.log(" ---- > in peer.on(call) Call was undefined...");
-                            }
-                        }
-
-                        $scope.reject = function() {
-                            $scope.showAnswerBtn = false;
-                            call.close();
-                        }
-                    });
-
-                    // Error Handling in peerJS
-                    peer.on('error', function(err) {
-                        $scope.error = err;
-                    });
-
-                    // Start the call with the other persons peer id
-                    $scope.startCall = function($event) {
-                        if ($event.which === 13) {
-                            $scope.isDisabled = true;
-                            initSelfVideo(function() {
-                                handleCall(peer.call($scope.peerId, $scope.localStream));
-                            });
-                        }
-                    };
-
-                    // End the call 
-                    $scope.endCall = function() {
-                        $scope.callInProgress.close(); // closing the call
-                        $scope.callInProgress = false;
-                        $scope.localVdoURL = null;
-                        $scope.peerVdoURL = null;
-                        $scope.showEndBtn = false; // reseting the buttons
-                    };
-
-                    // getUserMedia
-                    function initSelfVideo(cb) {
-                        navigator.getUserMedia({
-                            audio: true, // constraints for the call
-                            video: true
-                        }, function(stream) {
-                            $scope.localStream = stream; // sucess call back
-                            $scope.localVdoURL = $sce.trustAsResourceUrl(URL.createObjectURL(stream));
-                            console.log("get user media allocatig local resource");
-                            cb();
-                        }, function() {
-                            $scope.error = 'Unable to access your camera, Please try again';
-                        });
-                    }
-
-                    function handleCall(call) {
-                        if ($scope.callInProgress) {
-                            $scope.callInProgres$scope.close();
-                            $scope.showEndBtn = false;
-                        }
-                        console.log("handleCall", call);
-                        call.on('stream', function(peerStream) {
-                            console.log("Update peerStreamOn Stream add ");
-                            $scope.peerVdoURL = $sce.trustAsResourceUrl(URL.createObjectURL(peerStream));
-                            $scope.$apply();
-                        });
-                        $scope.callInProgress = call;
-                        $scope.showEndBtn = true;
-                        console.log("handler Call in progression");
-                    }
-                    
                 }
+
             };
         }
     ])

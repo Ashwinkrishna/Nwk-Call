@@ -21,6 +21,7 @@ app.get('/', routes.index);
 
 app.set('port', process.env.PORT || 3000);
 
+//var port = Number(process.env.PORT || 3000)
 var server = app.listen(app.get('port'), function() {
     // log a message to console!
     console.log("listining to port 3000");
@@ -31,9 +32,9 @@ var server = PeerServer({
     port: 9000
 });
 
-server.on('connection', function(id) { 
-    console.log("one user connected");
-});
-server.on('disconnect', function(id) { 
-        console.log("one user disconnected");
-});
+//server.on('connection', function(id) { 
+//    console.log("one user connected");
+//});
+//server.on('disconnect', function(id) { 
+//        console.log("one user disconnected");
+//});
