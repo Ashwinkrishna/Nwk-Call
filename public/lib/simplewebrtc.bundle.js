@@ -11,7 +11,7 @@ function SimpleWebRTC(opts) {
     var self = this;
     var options = opts || {};
     var config = this.config = {
-            url: 'http://192.168.48.45:9000/',
+            url: 'http://184.73.254.59:9000/',
             socketio: {/* 'force new connection':true*/},
             connection: null,
             debug: false,
