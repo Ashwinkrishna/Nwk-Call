@@ -27,14 +27,3 @@ var server = app.listen(app.get('port'), function() {
     console.log("listining to port 3000");
 });
 
-var PeerServer = require('peer').PeerServer;
-var server = PeerServer({
-    port: 9000
-});
-
-//server.on('connection', function(id) { 
-//    console.log("one user connected");
-//});
-//server.on('disconnect', function(id) { 
-//        console.log("one user disconnected");
-//});
